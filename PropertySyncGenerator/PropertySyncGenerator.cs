@@ -134,10 +134,10 @@ namespace PropertySyncGenerator
         {
         }
 
-        private IEnumerable<INamedTypeSymbol> GetAllPublicTypesWithProperties(Compilation compilation) => GetAllTypesWithProperties(compilation).Where(x => x.DeclaredAccessibility == Accessibility.Public && x.TypeParameters.Length == 0);
-        private IEnumerable<INamedTypeSymbol> GetAllTypesWithProperties(Compilation compilation) => GetAllTypes(compilation).Where(x => !x.IsStatic && x.GetAccessibleProperties().Any());
+        private static IEnumerable<INamedTypeSymbol> GetAllPublicTypesWithProperties(Compilation compilation) => GetAllTypesWithProperties(compilation).Where(x => x.DeclaredAccessibility == Accessibility.Public && x.TypeParameters.Length == 0);
+        private static IEnumerable<INamedTypeSymbol> GetAllTypesWithProperties(Compilation compilation) => GetAllTypes(compilation).Where(x => !x.IsStatic && x.GetAccessibleProperties().Any());
 
-        private IEnumerable<INamedTypeSymbol> GetAllTypes(Compilation compilation)
+        private static IEnumerable<INamedTypeSymbol> GetAllTypes(Compilation compilation)
         {
             foreach (INamedTypeSymbol symbol in GetAllPublicTypes(compilation.Assembly.GlobalNamespace))
             {
@@ -156,7 +156,7 @@ namespace PropertySyncGenerator
             }
         }
 
-        private IEnumerable<INamedTypeSymbol> GetAllPublicTypes(params INamespaceOrTypeSymbol[] symbols)
+        private static IEnumerable<INamedTypeSymbol> GetAllPublicTypes(params INamespaceOrTypeSymbol[] symbols)
         {
             var stack = new Stack<INamespaceOrTypeSymbol>(symbols);
 
@@ -179,7 +179,7 @@ namespace PropertySyncGenerator
             }
         }
 
-        private IEnumerable<INamedTypeSymbol> GetAllTypes(params INamespaceOrTypeSymbol[] symbols)
+        private static IEnumerable<INamedTypeSymbol> GetAllTypes(params INamespaceOrTypeSymbol[] symbols)
         {
             var stack = new Stack<INamespaceOrTypeSymbol>(symbols);
 
