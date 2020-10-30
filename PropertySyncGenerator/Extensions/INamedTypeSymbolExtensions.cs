@@ -22,9 +22,11 @@ namespace PropertySyncGenerator.Extensions
         {
             foreach (IPropertySymbol item in left.GetAccessibleProperties())
             {
-                return right.GetAccessibleProperties()
-                            .Any(x => x.Name == item.Name
-                                      && SymbolEqualityComparer.Default.Equals(x.Type, item.Type));
+                bool matching = right.GetAccessibleProperties().Any(x => x.Name == item.Name && SymbolEqualityComparer.Default.Equals(x.Type, item.Type));
+                if (matching)
+                {
+                    return true;
+                }
             }
             return false;
         }
