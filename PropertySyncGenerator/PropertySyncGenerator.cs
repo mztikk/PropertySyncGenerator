@@ -58,41 +58,40 @@ namespace PropertySyncGenerator
 
                     Action<BodyWriter> dictionarySourceMethodBodyWriter = (bodyWriter) =>
                     {
-                        bodyWriter.WriteLine($"foreach (System.Collections.Generic.KeyValuePair<string, string> item in {dictionarySourceArguments[0].Name})");
-                        bodyWriter.WriteLine("{");
-                        bodyWriter.IndentationLevel++;
+                        bodyWriter.WriteForEachLoop(
+                            new ForEachLoop(
+                                "System.Collections.Generic.KeyValuePair<string, string> item",
+                                dictionarySourceArguments[0].Name,
+                                (forEachLoopWriter) =>
+                                {
+                                    var caseStatements = new List<CaseStatement>();
 
-                        bodyWriter.WriteLine($"switch (item.Key)");
-                        bodyWriter.WriteLine("{");
-                        bodyWriter.IndentationLevel++;
+                                    foreach (IPropertySymbol prop in t1members.Where(prop => prop.Type.HasStringParse() || prop.Type.Name == "String"))
+                                    {
+                                        var caseStmt = new CaseStatement(
+                                            $"\"{prop.Name}\"",
+                                            (caseWriter) =>
+                                            {
+                                                caseWriter.Write($"{dictionarySourceArguments[1].Name}.{prop.Name} = ");
+                                                string fullTypeName = prop.Type.ToString().TrimEnd('?');
+                                                switch (prop.Type.Name)
+                                                {
+                                                    case "String":
+                                                        caseWriter.Write("item.Value");
+                                                        break;
+                                                    default:
+                                                        caseWriter.Write($"{fullTypeName}.Parse(item.Value)");
+                                                        break;
+                                                }
+                                                caseWriter.WriteLine(";");
+                                                caseWriter.WriteBreak();
+                                            });
 
-                        foreach (IPropertySymbol prop in t1members.Where(prop => prop.Type.HasStringParse() || prop.Type.Name == "String"))
-                        {
-                            bodyWriter.WriteLine($"case \"{prop.Name}\":");
-                            bodyWriter.IndentationLevel++;
+                                        caseStatements.Add(caseStmt);
+                                    }
 
-                            bodyWriter.Write($"{dictionarySourceArguments[1].Name}.{prop.Name} = ");
-                            string fullTypeName = prop.Type.ToString().TrimEnd('?');
-                            switch (prop.Type.Name)
-                            {
-                                case "String":
-                                    bodyWriter.Write("item.Value");
-                                    break;
-                                default:
-                                    bodyWriter.Write($"{fullTypeName}.Parse(item.Value)");
-                                    break;
-                            }
-                            bodyWriter.WriteLine(";");
-
-                            bodyWriter.WriteLine("break;");
-                            bodyWriter.IndentationLevel--;
-                        }
-
-                        bodyWriter.IndentationLevel--;
-                        bodyWriter.WriteLine("}");
-
-                        bodyWriter.IndentationLevel--;
-                        bodyWriter.WriteLine("}");
+                                    forEachLoopWriter.WriteSwitchCaseStatement(new SwitchCaseStatement("item.Key", caseStatements));
+                                }));
                     };
 
                     var dictionarySourceMethod = new Method(Accessibility.Public, true, false, "void", "Sync", dictionarySourceArguments, dictionarySourceMethodBodyWriter);
@@ -125,7 +124,7 @@ namespace PropertySyncGenerator
             }
 
             string str = ClassWriter.WriteAsync(c).GetAwaiter().GetResult();
-            //File.WriteAllText("test.cs", str);
+            //File.WriteAllText(@"test.cs", str);
 
             context.AddSource("PropertySync", SourceText.From(str, Encoding.UTF8));
         }
