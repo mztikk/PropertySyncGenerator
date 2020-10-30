@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -35,18 +36,16 @@ namespace PropertySyncGenerator
                 {
                     foreach (IPropertySymbol prop in t1members)
                     {
-                        bodyWriter.WriteLine($"if ({dictionaryTargetArguments[1].Name}.ContainsKey(\"{prop.Name}\"))");
-                        bodyWriter.WriteLine("{");
-                        bodyWriter.IndentationLevel++;
-                        bodyWriter.Write($"{dictionaryTargetArguments[1].Name}[\"{prop.Name}\"] = ");
-                        bodyWriter.Write($"{dictionaryTargetArguments[0].Name}.{prop.Name}");
-                        if (prop.Type.Name != "String")
+                        bodyWriter.WriteIf(new If($"{dictionaryTargetArguments[1].Name}.ContainsKey(\"{prop.Name}\")", (ifWriter) =>
                         {
-                            bodyWriter.Write(".ToString()");
-                        }
-                        bodyWriter.WriteLine(";");
-                        bodyWriter.IndentationLevel--;
-                        bodyWriter.WriteLine("}");
+                            string value = $"{dictionaryTargetArguments[0].Name}.{prop.Name}";
+                            if (prop.Type.Name != "String")
+                            {
+                                value += ".ToString()";
+                            }
+
+                            ifWriter.WriteAssignment($"{dictionaryTargetArguments[1].Name}[\"{prop.Name}\"]", value);
+                        }));
                     }
                 };
 
@@ -54,7 +53,10 @@ namespace PropertySyncGenerator
 
                 if (t1members.Any(x => x.Type.HasStringParse()))
                 {
-                    var dictionarySourceArguments = new List<Argument> { new Argument("System.Collections.Generic.Dictionary<string, string>", "target"), new Argument(t1.ToString(), "source") };
+                    var dictionarySourceArguments = new List<Argument> {
+                        new Argument("System.Collections.Generic.Dictionary<string, string>", "source"),
+                        new Argument(t1.ToString(), "target")
+                    };
 
                     Action<BodyWriter> dictionarySourceMethodBodyWriter = (bodyWriter) =>
                     {
@@ -101,7 +103,7 @@ namespace PropertySyncGenerator
 
                 c.WithMethod(dictionaryTargetMethod);
 
-                foreach (INamedTypeSymbol t2 in GetAllPublicTypesWithProperties(context.Compilation).Where(x => !SymbolEqualityComparer.Default.Equals(t1, x) && t1.HasMatchingProperties(x)))
+                foreach (INamedTypeSymbol t2 in GetAllPublicTypesWithProperties(context.Compilation).Where(x => t1.HasMatchingProperties(x)))
                 {
                     IEnumerable<IPropertySymbol> t2members = t2.GetAccessibleProperties();
 

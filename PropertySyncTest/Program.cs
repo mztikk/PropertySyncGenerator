@@ -3,6 +3,19 @@ using System.Collections.Generic;
 
 namespace PropertySyncTest
 {
+    public record TestRecordA()
+    {
+        public string StringA { get; set; }
+        public string StringB { get; set; }
+        public int IntA { get; set; }
+        public int IntB { get; set; }
+    }
+    public record TestRecordB()
+    {
+        public string StringB { get; set; }
+        public int IntB { get; set; }
+    }
+
     internal class Program
     {
         private static void Main(string[] args)
@@ -16,12 +29,28 @@ namespace PropertySyncTest
             Console.WriteLine(b.StringB);
             Console.WriteLine(b.IntA);
 
-            var dict = new Dictionary<string, string>() { {"StringB", "Hello from Dictionary" } };
+            Console.WriteLine();
+
+            var dict = new Dictionary<string, string>() { {"StringB", "Hello from Dictionary!" } };
             Console.WriteLine("Sync from Dictionary<string, string>");
             PropertySync.Sync(dict, b);
             Console.WriteLine(b.StringA);
             Console.WriteLine(b.StringB);
             Console.WriteLine(b.IntA);
+
+            var ra = new TestRecordA() { StringB = "Hello from TestRecordA!", IntA = 59 };
+            var rb = new TestRecordB() { IntB = 6, StringB = "B" };
+            Console.WriteLine("Sync from TestRecordA");
+            PropertySync.Sync(ra, rb);
+            Console.WriteLine(rb.StringB);
+            Console.WriteLine(rb.IntB);
+
+            Console.WriteLine();
+
+            Console.WriteLine("Sync from Dictionary<string, string>");
+            PropertySync.Sync(dict, rb);
+            Console.WriteLine(rb.StringB);
+            Console.WriteLine(rb.IntB);
         }
     }
 }
