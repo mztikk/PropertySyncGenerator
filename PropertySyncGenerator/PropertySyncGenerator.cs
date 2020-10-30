@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -125,7 +124,7 @@ namespace PropertySyncGenerator
                 }
             }
 
-            string str = ClassWriter.WriteAsync(c).GetAwaiter().GetResult();
+            string str = ClassWriter.Write(c);
             //File.WriteAllText(@"test.cs", str);
 
             context.AddSource("PropertySync", SourceText.From(str, Encoding.UTF8));

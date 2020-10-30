@@ -38,6 +38,8 @@ namespace PropertySyncTest
             Console.WriteLine(b.StringB);
             Console.WriteLine(b.IntA);
 
+            Console.WriteLine();
+
             var ra = new TestRecordA() { StringB = "Hello from TestRecordA!", IntA = 59 };
             var rb = new TestRecordB() { IntB = 6, StringB = "B" };
             Console.WriteLine("Sync from TestRecordA");
