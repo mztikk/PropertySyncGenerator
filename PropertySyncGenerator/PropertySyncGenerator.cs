@@ -28,7 +28,8 @@ namespace PropertySyncGenerator
 
                 var dictionaryTargetArguments = new List<Argument> {
                     new (t1.ToString(), "source"),
-                    new ("System.Collections.Generic.Dictionary<string, string>", "target")
+                    new ("System.Collections.Generic.Dictionary<string, string>", "target"),
+                    new ("bool", "force", "false")
                 };
 
                 Action<BodyWriter> dictionaryTargetMethodBodyWriter = (bodyWriter) =>
@@ -36,7 +37,7 @@ namespace PropertySyncGenerator
                     foreach (IPropertySymbol prop in t1members)
                     {
                         bodyWriter.WriteIf(new If
-                            ($"{dictionaryTargetArguments[1].Name}.ContainsKey(\"{prop.Name}\")",
+                            ($"{dictionaryTargetArguments[1].Name}.ContainsKey(\"{prop.Name}\") || {dictionaryTargetArguments[2].Name}",
                             (ifWriter) =>
                             {
                                 string value = $"{dictionaryTargetArguments[0].Name}.{prop.Name}";
