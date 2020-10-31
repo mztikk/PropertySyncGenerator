@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Sharpie" Version="0.2.5" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\PropertySyncGenerator\PropertySyncGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
