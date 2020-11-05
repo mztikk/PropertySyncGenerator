@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PropertySyncGenerator", "Pr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PropertySyncTest", "PropertySyncTest\PropertySyncTest.csproj", "{15272CD5-273E-4096-BFF7-1563A7272A26}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{6D72A9D5-A9CD-4469-A28F-D2A5219B0DA2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{15272CD5-273E-4096-BFF7-1563A7272A26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15272CD5-273E-4096-BFF7-1563A7272A26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15272CD5-273E-4096-BFF7-1563A7272A26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D72A9D5-A9CD-4469-A28F-D2A5219B0DA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D72A9D5-A9CD-4469-A28F-D2A5219B0DA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D72A9D5-A9CD-4469-A28F-D2A5219B0DA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D72A9D5-A9CD-4469-A28F-D2A5219B0DA2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
