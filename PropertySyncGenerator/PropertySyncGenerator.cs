@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -15,24 +14,27 @@ namespace PropertySyncGenerator
     {
         public void Execute(GeneratorExecutionContext context)
         {
-            Class c = new Class("PropertySync")
-                .SetNamespace(context.Compilation.AssemblyName)
-                .SetStatic(true)
-                .WithAccessibility(Accessibility.Public);
-
             //Debugger.Launch();
 
             foreach (INamedTypeSymbol t1 in GetAllPublicTypesWithProperties(context.Compilation))
             {
+                string fullTypeName = t1.ToString();
+                string className = $"PropertySync{fullTypeName.Replace('.', '_')}Extensions";
+
+                Class c = new Class(className)
+                    .SetNamespace(context.Compilation.AssemblyName)
+                    .SetStatic(true)
+                    .WithAccessibility(Accessibility.Public);
+
                 IEnumerable<IPropertySymbol> t1members = t1.GetAccessibleProperties();
 
                 var dictionaryTargetArguments = new List<Argument> {
-                    new (t1.ToString(), "source"),
+                    new (t1.ToString(), "source", true),
                     new ("System.Collections.Generic.Dictionary<string, string>", "target"),
                     new ("bool", "force", "false")
                 };
 
-                Action<BodyWriter> dictionaryTargetMethodBodyWriter = (bodyWriter) =>
+                void dictionaryTargetMethodBodyWriter(BodyWriter bodyWriter)
                 {
                     foreach (IPropertySymbol prop in t1members)
                     {
@@ -49,20 +51,18 @@ namespace PropertySyncGenerator
                                 ifWriter.WriteAssignment($"{dictionaryTargetArguments[1].Name}[\"{prop.Name}\"]", value);
                             }));
                     }
-                };
+                }
 
                 Method dictionaryTargetMethod = new(Accessibility.Public, true, false, "void", "Sync", dictionaryTargetArguments, dictionaryTargetMethodBodyWriter);
 
                 if (t1members.Any(x => x.Type.HasStringParse()))
                 {
                     var dictionarySourceArguments = new List<Argument> {
-                        new ("System.Collections.Generic.Dictionary<string, string>", "source"),
+                        new ("System.Collections.Generic.Dictionary<string, string>", "source", true),
                         new (t1.ToString(), "target")
                     };
 
-                    Action<BodyWriter> dictionarySourceMethodBodyWriter = (bodyWriter) =>
-                    {
-                        bodyWriter.WriteForEachLoop(new ForEachLoop(
+                    void dictionarySourceMethodBodyWriter(BodyWriter bodyWriter) => bodyWriter.WriteForEachLoop(new ForEachLoop(
                                 "System.Collections.Generic.KeyValuePair<string, string> item",
                                 dictionarySourceArguments[0].Name,
                                 (forEachLoopWriter) =>
@@ -95,7 +95,6 @@ namespace PropertySyncGenerator
 
                                     forEachLoopWriter.WriteSwitchCaseStatement(new SwitchCaseStatement("item.Key", caseStatements));
                                 }));
-                    };
 
                     var dictionarySourceMethod = new Method(Accessibility.Public, true, false, "void", "Sync", dictionarySourceArguments, dictionarySourceMethodBodyWriter);
 
@@ -109,11 +108,11 @@ namespace PropertySyncGenerator
                     IEnumerable<IPropertySymbol> t2members = t2.GetAccessibleProperties();
 
                     var arguments = new List<Argument> {
-                        new(t1.ToString(), "source"),
+                        new(t1.ToString(), "source", true),
                         new(t2.ToString(), "target")
                     };
 
-                    Action<BodyWriter> bodyWriter = (bodyWriter) =>
+                    void bodyWriter(BodyWriter bodyWriter)
                     {
                         foreach (IPropertySymbol item in t2members)
                         {
@@ -122,17 +121,16 @@ namespace PropertySyncGenerator
                                 bodyWriter.WriteLine($"{arguments[1].Name}.{item.Name} = {arguments[0].Name}.{t1members.First(x => x.Name == item.Name).Name};");
                             }
                         }
-                    };
+                    }
 
                     var m = new Method(Accessibility.Public, true, false, "void", "Sync", arguments, bodyWriter);
                     c.WithMethod(m);
                 }
+
+                string str = ClassWriter.Write(c);
+
+                context.AddSource(className, SourceText.From(str, Encoding.UTF8));
             }
-
-            string str = ClassWriter.Write(c);
-            //File.WriteAllText(@"test.cs", str);
-
-            context.AddSource("PropertySync", SourceText.From(str, Encoding.UTF8));
         }
 
         public void Initialize(GeneratorInitializationContext context)
@@ -176,7 +174,9 @@ namespace PropertySyncGenerator
 
                 foreach (ISymbol member in item.GetMembers())
                 {
-                    if (member is INamespaceOrTypeSymbol child && child.DeclaredAccessibility == Accessibility.Public && (member is not INamedTypeSymbol typeSymbol || typeSymbol.TypeParameters.Length == 0))
+                    if (member is INamespaceOrTypeSymbol child
+                        && child.DeclaredAccessibility == Accessibility.Public
+                        && (member is not INamedTypeSymbol typeSymbol || typeSymbol.TypeParameters.Length == 0))
                     {
                         stack.Push(child);
                     }

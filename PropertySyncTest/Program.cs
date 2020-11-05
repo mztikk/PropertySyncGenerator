@@ -24,7 +24,8 @@ namespace PropertySyncTest
             var a = new TestA() { StringA = "Hello from TestA!", IntA = 59 };
             var b = new TestB() { IntA = 6, StringA = "S", StringB = "B" };
             Console.WriteLine("Sync from TestA");
-            PropertySync.Sync(a, b);
+            //PropertySync.Sync(a, b);
+            a.Sync(b);
             Console.WriteLine(b.StringA);
             Console.WriteLine(b.StringB);
             Console.WriteLine(b.IntA);
@@ -33,7 +34,9 @@ namespace PropertySyncTest
 
             var dict = new Dictionary<string, string>() { {"StringB", "Hello from Dictionary!" } };
             Console.WriteLine("Sync from Dictionary<string, string>");
-            PropertySync.Sync(dict, b);
+            //PropertySync.Sync(dict, b);
+            dict.Sync(b);
+
             Console.WriteLine(b.StringA);
             Console.WriteLine(b.StringB);
             Console.WriteLine(b.IntA);
@@ -43,14 +46,16 @@ namespace PropertySyncTest
             var ra = new TestRecordA() { StringB = "Hello from TestRecordA!", IntA = 59 };
             var rb = new TestRecordB() { IntB = 6, StringB = "B" };
             Console.WriteLine("Sync from TestRecordA");
-            PropertySync.Sync(ra, rb);
+            //PropertySync.Sync(ra, rb);
+            ra.Sync(rb);
             Console.WriteLine(rb.StringB);
             Console.WriteLine(rb.IntB);
 
             Console.WriteLine();
 
             Console.WriteLine("Sync from Dictionary<string, string>");
-            PropertySync.Sync(dict, rb);
+            //PropertySync.Sync(dict, rb);
+            dict.Sync(rb);
             Console.WriteLine(rb.StringB);
             Console.WriteLine(rb.IntB);
         }
