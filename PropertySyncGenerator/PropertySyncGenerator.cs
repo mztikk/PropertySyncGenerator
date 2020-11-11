@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -18,10 +17,16 @@ namespace PropertySyncGenerator
         {
             //Debugger.Launch();
 
+            var generated = new HashSet<string>();
+
             foreach (INamedTypeSymbol t1 in GetAllPublicTypesWithProperties(context.Compilation))
             {
                 string fullTypeName = t1.ToString();
                 string className = $"PropertySync_{fullTypeName.Replace('.', '_')}_Extensions";
+                if (generated.Contains(className))
+                {
+                    continue;
+                }
 
                 Class c = new Class(className)
                     .SetNamespace(context.Compilation.AssemblyName)
@@ -132,6 +137,7 @@ namespace PropertySyncGenerator
                 string str = ClassWriter.Write(c);
 
                 context.AddSource(className, SourceText.From(str, Encoding.UTF8));
+                generated.Add(className);
             }
         }
 
