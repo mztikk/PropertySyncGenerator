@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -19,7 +21,7 @@ namespace PropertySyncGenerator
             foreach (INamedTypeSymbol t1 in GetAllPublicTypesWithProperties(context.Compilation))
             {
                 string fullTypeName = t1.ToString();
-                string className = $"PropertySync{fullTypeName.Replace('.', '_')}Extensions";
+                string className = $"PropertySync_{fullTypeName.Replace('.', '_')}_Extensions";
 
                 Class c = new Class(className)
                     .SetNamespace(context.Compilation.AssemblyName)
@@ -49,7 +51,7 @@ namespace PropertySyncGenerator
                                 }
 
                                 ifWriter.WriteAssignment($"{dictionaryTargetArguments[1].Name}[\"{prop.Name}\"]", value);
-                            }));
+                            }, Array.Empty<ElseIf>(), null));
                     }
                 }
 
