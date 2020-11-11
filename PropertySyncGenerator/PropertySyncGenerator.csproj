@@ -7,14 +7,18 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-    <PropertyGroup>
+  <PropertyGroup>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <PackageLicenseUrl>https://github.com/mztikk/PropertySyncGenerator/blob/master/LICENSE.md</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/mztikk/PropertySyncGenerator</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mztikk/PropertySyncGenerator</RepositoryUrl>
     <Authors>mztikk</Authors>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>0.0.1</Version>
-    <AssemblyVersion>0.0.1</AssemblyVersion>
+    <PackageVersion>0.0.0.2</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
