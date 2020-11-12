@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -6,7 +7,19 @@ namespace PropertySyncGenerator.Extensions
 {
     public static class INamedTypeSymbolExtensions
     {
+        private static readonly ConcurrentDictionary<INamedTypeSymbol, IEnumerable<IPropertySymbol>> s_propertyMap = new ConcurrentDictionary<INamedTypeSymbol, IEnumerable<IPropertySymbol>>(SymbolEqualityComparer.Default);
+
         public static IEnumerable<IPropertySymbol> GetAccessibleProperties(this INamedTypeSymbol symbol)
+        {
+            if (!s_propertyMap.ContainsKey(symbol))
+            {
+                s_propertyMap[symbol] = symbol.EnumerateAccessibleProperties().ToArray();
+            }
+
+            return s_propertyMap[symbol];
+        }
+
+        private static IEnumerable<IPropertySymbol> EnumerateAccessibleProperties(this INamedTypeSymbol symbol)
         {
             INamedTypeSymbol? toGet = symbol;
             while (toGet is { })

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace PropertySyncTest
 {
+    [PropertySyncGenerator.Syncable]
     public record TestRecordA()
     {
         public string StringA { get; set; }
@@ -10,6 +11,7 @@ namespace PropertySyncTest
         public int IntA { get; set; }
         public int IntB { get; set; }
     }
+    [PropertySyncGenerator.Syncable]
     public record TestRecordB()
     {
         public string StringB { get; set; }

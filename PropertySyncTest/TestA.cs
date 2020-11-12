@@ -1,5 +1,8 @@
-﻿namespace PropertySyncTest
+﻿using PropertySyncGenerator;
+
+namespace PropertySyncTest
 {
+    [Syncable]
     public class TestA
     {
         public string StringA { get; set; }
@@ -9,6 +12,7 @@
         public bool BoolB { get; set; }
     }
 
+    [Syncable]
     public class Test2A : TestA
     {
         public string String2A { get; set; }
