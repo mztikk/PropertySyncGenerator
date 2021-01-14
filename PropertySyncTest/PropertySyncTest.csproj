@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Models\Models.csproj" />
-    <ProjectReference Include="..\PropertySyncGenerator\PropertySyncGenerator.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\PropertySyncGenerator\PropertySyncGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

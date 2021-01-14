@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using PropertySyncGenerator.Extensions;
 using Sharpie;
 using Sharpie.Writer;
 
@@ -13,199 +14,131 @@ namespace PropertySyncGenerator
     [Generator]
     public class PropertySyncGenerator : ISourceGenerator
     {
+        public static Action<BodyWriter> EmptyWriter = (writer) => { };
+        public const string StringDict = "System.Collections.Generic.Dictionary<string, string>";
+
         public void Execute(GeneratorExecutionContext context)
         {
-            //Debugger.Launch();
+            string ns = context.Compilation.AssemblyName ?? context.Compilation.ToString();
+            string className = $"PropertySync";
+            string fullName = $"{ns}.{className}";
 
-            foreach (INamedTypeSymbol t1 in GetAllPublicTypesWithProperties(context.Compilation))
+            Class stubClass = new Class(className)
+                .SetStatic(true)
+                .SetNamespace(ns)
+                .WithAccessibility(Accessibility.Internal)
+                .WithMethod(SyncMethod.Stub())
+                .WithMethod(SyncToDictMethod.Stub())
+                .WithMethod(SyncFromDictMethod.Stub());
+
+            Compilation compilation = GetStubCompilation(context, stubClass);
+            INamedTypeSymbol stubClassType = compilation.GetTypeByMetadataName(fullName);
+
+            IEnumerable<(ITypeSymbol, ITypeSymbol)>? calls = GetStubCalls(compilation, stubClassType);
+
+            Class generatedClass = new Class(className)
+                .SetStatic(true)
+                .SetNamespace(ns)
+                .WithAccessibility(Accessibility.Internal);
+
+            var generatedToTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+            var generatedFromTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+            var generatedSyncTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+
+            if (calls.Any())
             {
-                string fullTypeName = t1.ToString();
-                string className = $"PropertySync_{fullTypeName.Replace('.', '_')}_Extensions";
-
-                Class c = new Class(className)
-                    .SetNamespace(context.Compilation.AssemblyName)
-                    .SetStatic(true)
-                    .WithAccessibility(Accessibility.Public);
-
-                IEnumerable<IPropertySymbol> t1members = t1.GetAccessibleProperties();
-
-                var dictionaryTargetArguments = new List<Argument> {
-                    new (t1.ToString(), "source", true),
-                    new ("System.Collections.Generic.Dictionary<string, string>", "target"),
-                    new ("bool", "force", "false")
-                };
-
-                void dictionaryTargetMethodBodyWriter(BodyWriter bodyWriter)
+                foreach ((ITypeSymbol t1, ITypeSymbol t2) in calls)
                 {
-                    foreach (IPropertySymbol prop in t1members)
+                    if (t1 is null || t2 is null)
                     {
-                        bodyWriter.WriteIf(new If
-                            ($"{dictionaryTargetArguments[1].Name}.ContainsKey(\"{prop.Name}\") || {dictionaryTargetArguments[2].Name}",
-                            (ifWriter) =>
-                            {
-                                string value = $"{dictionaryTargetArguments[0].Name}.{prop.Name}";
-                                if (prop.Type.Name != "String")
-                                {
-                                    value += ".ToString()";
-                                }
-
-                                ifWriter.WriteAssignment($"{dictionaryTargetArguments[1].Name}[\"{prop.Name}\"]", value);
-                            }, Array.Empty<ElseIf>(), null));
+                        continue;
                     }
-                }
 
-                Method dictionaryTargetMethod = new(Accessibility.Public, true, false, "void", "Sync", dictionaryTargetArguments, dictionaryTargetMethodBodyWriter);
-
-                if (t1members.Any(x => x.Type.HasStringParse()))
-                {
-                    var dictionarySourceArguments = new List<Argument> {
-                        new ("System.Collections.Generic.Dictionary<string, string>", "source", true),
-                        new (t1.ToString(), "target")
-                    };
-
-                    void dictionarySourceMethodBodyWriter(BodyWriter bodyWriter) => bodyWriter.WriteForEachLoop(new ForEachLoop(
-                                "System.Collections.Generic.KeyValuePair<string, string> item",
-                                dictionarySourceArguments[0].Name,
-                                (forEachLoopWriter) =>
-                                {
-                                    var caseStatements = new List<CaseStatement>();
-
-                                    foreach (IPropertySymbol prop in t1members.Where(prop => prop.Type.HasStringParse() || prop.Type.Name == "String"))
-                                    {
-                                        var caseStmt = new CaseStatement(
-                                            $"\"{prop.Name}\"",
-                                            (caseWriter) =>
-                                            {
-                                                caseWriter.Write($"{dictionarySourceArguments[1].Name}.{prop.Name} = ");
-                                                string fullTypeName = prop.Type.ToString().TrimEnd('?');
-                                                switch (prop.Type.Name)
-                                                {
-                                                    case "String":
-                                                        caseWriter.Write("item.Value");
-                                                        break;
-                                                    default:
-                                                        caseWriter.Write($"{fullTypeName}.Parse(item.Value)");
-                                                        break;
-                                                }
-                                                caseWriter.WriteLine(";");
-                                                caseWriter.WriteBreak();
-                                            });
-
-                                        caseStatements.Add(caseStmt);
-                                    }
-
-                                    forEachLoopWriter.WriteSwitchCaseStatement(new SwitchCaseStatement("item.Key", caseStatements));
-                                }));
-
-                    var dictionarySourceMethod = new Method(Accessibility.Public, true, false, "void", "Sync", dictionarySourceArguments, dictionarySourceMethodBodyWriter);
-
-                    c.WithMethod(dictionarySourceMethod);
-                }
-
-                c.WithMethod(dictionaryTargetMethod);
-
-                foreach (INamedTypeSymbol t2 in GetAllPublicTypesWithProperties(context.Compilation).Where(x => t1.HasMatchingProperties(x)))
-                {
-                    IEnumerable<IPropertySymbol> t2members = t2.GetAccessibleProperties();
-
-                    var arguments = new List<Argument> {
-                        new(t1.ToString(), "source", true),
-                        new(t2.ToString(), "target")
-                    };
-
-                    void bodyWriter(BodyWriter bodyWriter)
+                    if (t1.ToString() == StringDict)
                     {
-                        foreach (IPropertySymbol item in t2members)
+                        if (generatedFromTypes.Contains(t2))
                         {
-                            if (t1members.Any(x => x.Name == item.Name && SymbolEqualityComparer.Default.Equals(x.Type, item.Type)))
-                            {
-                                bodyWriter.WriteLine($"{arguments[1].Name}.{item.Name} = {arguments[0].Name}.{t1members.First(x => x.Name == item.Name).Name};");
-                            }
+                            continue;
                         }
-                    }
 
-                    var m = new Method(Accessibility.Public, true, false, "void", "Sync", arguments, bodyWriter);
-                    c.WithMethod(m);
+                        generatedClass = generatedClass.WithMethod(new SyncFromDictMethod(t2).Build());
+                        generatedFromTypes.Add(t2);
+                    }
+                    else if (t2.ToString() == StringDict)
+                    {
+                        if (generatedToTypes.Contains(t1))
+                        {
+                            continue;
+                        }
+
+                        generatedClass = generatedClass.WithMethod(new SyncToDictMethod(t1).Build());
+                        generatedToTypes.Add(t1);
+                    }
+                    else
+                    {
+                        if (generatedSyncTypes.Contains(t1))
+                        {
+                            continue;
+                        }
+
+                        generatedClass = generatedClass.WithMethod(new SyncMethod(t1, t2).Build());
+                        generatedSyncTypes.Add(t1);
+                    }
                 }
 
-                string str = ClassWriter.Write(c);
+                string str = ClassWriter.Write(generatedClass);
 
                 context.AddSource(className, SourceText.From(str, Encoding.UTF8));
+            }
+            else
+            {
+                context.AddSource(stubClass.ClassName, SourceText.From(ClassWriter.Write(stubClass), Encoding.UTF8));
+            }
+        }
+
+        private static Compilation GetStubCompilation(GeneratorExecutionContext context, Class stubClass)
+        {
+            Compilation compilation = context.Compilation;
+
+            var options = (compilation as CSharpCompilation)?.SyntaxTrees[0].Options as CSharpParseOptions;
+
+            return compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(ClassWriter.Write(stubClass), Encoding.UTF8), options));
+        }
+
+        private static IEnumerable<(ITypeSymbol, ITypeSymbol)> GetStubCalls(Compilation compilation, INamedTypeSymbol stubClassType)
+        {
+            foreach (SyntaxTree tree in compilation.SyntaxTrees)
+            {
+                SemanticModel semanticModel = compilation.GetSemanticModel(tree);
+                foreach (InvocationExpressionSyntax invocation in tree.GetRoot().DescendantNodesAndSelf().OfType<InvocationExpressionSyntax>())
+                {
+                    if (semanticModel.GetSymbolInfo(invocation).Symbol is IMethodSymbol symbol && symbol.ContainingType is { })
+                    {
+                        if (SymbolEqualityComparer.Default.Equals(symbol.ContainingType, stubClassType))
+                        {
+                            SeparatedSyntaxList<ArgumentSyntax> args = invocation.ArgumentList.Arguments;
+                            if (args.Count < 2)
+                            {
+                                continue;
+                            }
+
+                            ExpressionSyntax firstArgument = args[0].Expression;
+                            ExpressionSyntax secondArgument = args[1].Expression;
+                            ITypeSymbol firstArgumentType = semanticModel.GetTypeInfo(firstArgument).Type;
+                            ITypeSymbol secondArgumentType = semanticModel.GetTypeInfo(secondArgument).Type;
+                            if (firstArgumentType is null || secondArgumentType is null)
+                            {
+                                continue;
+                            }
+                            yield return (firstArgumentType, secondArgumentType);
+                        }
+                    }
+                }
             }
         }
 
         public void Initialize(GeneratorInitializationContext context)
         {
-        }
-
-        private static IEnumerable<INamedTypeSymbol> GetAllPublicTypesWithProperties(Compilation compilation) => GetAllTypesWithProperties(compilation).Where(x => x.DeclaredAccessibility == Accessibility.Public && x.TypeParameters.Length == 0);
-        private static IEnumerable<INamedTypeSymbol> GetAllTypesWithProperties(Compilation compilation) => GetAllTypes(compilation).Where(x => !x.IsStatic && x.GetAccessibleProperties().Any());
-
-        private static IEnumerable<INamedTypeSymbol> GetAllTypes(Compilation compilation)
-        {
-            foreach (INamedTypeSymbol symbol in GetAllPublicTypes(compilation.Assembly.GlobalNamespace))
-            {
-                yield return symbol;
-            }
-
-            foreach (MetadataReference item in compilation.References)
-            {
-                if (compilation.GetAssemblyOrModuleSymbol(item) is IAssemblySymbol assemblySymbol)
-                {
-                    foreach (INamedTypeSymbol symbol in GetAllPublicTypes(assemblySymbol.GlobalNamespace))
-                    {
-                        yield return symbol;
-                    }
-                }
-            }
-        }
-
-        private static IEnumerable<INamedTypeSymbol> GetAllPublicTypes(params INamespaceOrTypeSymbol[] symbols)
-        {
-            var stack = new Stack<INamespaceOrTypeSymbol>(symbols);
-
-            while (stack.Count > 0)
-            {
-                INamespaceOrTypeSymbol item = stack.Pop();
-
-                if (item is INamedTypeSymbol type && type.DeclaredAccessibility == Accessibility.Public && item.IsSyncable())
-                {
-                    yield return type;
-                }
-
-                foreach (ISymbol member in item.GetMembers())
-                {
-                    if (member is INamespaceOrTypeSymbol child
-                        && child.DeclaredAccessibility == Accessibility.Public
-                        && (member is not INamedTypeSymbol typeSymbol || typeSymbol.TypeParameters.Length == 0))
-                    {
-                        stack.Push(child);
-                    }
-                }
-            }
-        }
-
-        private static IEnumerable<INamedTypeSymbol> GetAllTypes(params INamespaceOrTypeSymbol[] symbols)
-        {
-            var stack = new Stack<INamespaceOrTypeSymbol>(symbols);
-
-            while (stack.Count > 0)
-            {
-                INamespaceOrTypeSymbol item = stack.Pop();
-
-                if (item is INamedTypeSymbol type)
-                {
-                    yield return type;
-                }
-
-                foreach (ISymbol member in item.GetMembers())
-                {
-                    if (member is INamespaceOrTypeSymbol child)
-                    {
-                        stack.Push(child);
-                    }
-                }
-            }
         }
     }
 }
