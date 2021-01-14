@@ -43,7 +43,8 @@ namespace PropertySyncGenerator
 
             var generatedToTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
             var generatedFromTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
-            var generatedSyncTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+            var generatedSyncSrcTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+            var generatedSyncTargetTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
 
             if (calls.Any())
             {
@@ -76,13 +77,14 @@ namespace PropertySyncGenerator
                     }
                     else
                     {
-                        if (generatedSyncTypes.Contains(t1))
+                        if (generatedSyncSrcTypes.Contains(t1) && generatedSyncTargetTypes.Contains(t2))
                         {
                             continue;
                         }
 
                         generatedClass = generatedClass.WithMethod(new SyncMethod(t1, t2).Build());
-                        generatedSyncTypes.Add(t1);
+                        generatedSyncSrcTypes.Add(t1);
+                        generatedSyncTargetTypes.Add(t2);
                     }
                 }
 
