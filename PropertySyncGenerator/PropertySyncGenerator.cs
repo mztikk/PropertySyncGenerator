@@ -32,7 +32,7 @@ namespace PropertySyncGenerator
                 .WithMethod(SyncFromDictMethod.Stub());
 
             Compilation compilation = GetStubCompilation(context, stubClass);
-            INamedTypeSymbol stubClassType = compilation.GetTypeByMetadataName(fullName);
+            INamedTypeSymbol? stubClassType = compilation.GetTypeByMetadataName(fullName);
 
             IEnumerable<(ITypeSymbol, ITypeSymbol)>? calls = GetStubCalls(compilation, stubClassType);
 
@@ -107,8 +107,13 @@ namespace PropertySyncGenerator
             return compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(ClassWriter.Write(stubClass), Encoding.UTF8), options));
         }
 
-        private static IEnumerable<(ITypeSymbol, ITypeSymbol)> GetStubCalls(Compilation compilation, INamedTypeSymbol stubClassType)
+        private static IEnumerable<(ITypeSymbol, ITypeSymbol)> GetStubCalls(Compilation compilation, INamedTypeSymbol? stubClassType)
         {
+            if (stubClassType is null)
+            {
+                yield break;
+            }
+
             foreach (SyntaxTree tree in compilation.SyntaxTrees)
             {
                 SemanticModel semanticModel = compilation.GetSemanticModel(tree);
@@ -126,8 +131,8 @@ namespace PropertySyncGenerator
 
                             ExpressionSyntax firstArgument = args[0].Expression;
                             ExpressionSyntax secondArgument = args[1].Expression;
-                            ITypeSymbol firstArgumentType = semanticModel.GetTypeInfo(firstArgument).Type;
-                            ITypeSymbol secondArgumentType = semanticModel.GetTypeInfo(secondArgument).Type;
+                            ITypeSymbol? firstArgumentType = semanticModel.GetTypeInfo(firstArgument).Type;
+                            ITypeSymbol? secondArgumentType = semanticModel.GetTypeInfo(secondArgument).Type;
                             if (firstArgumentType is null || secondArgumentType is null)
                             {
                                 continue;
