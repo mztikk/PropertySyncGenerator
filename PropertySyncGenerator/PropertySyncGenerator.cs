@@ -22,24 +22,22 @@ namespace PropertySyncGenerator
             string className = $"PropertySync";
             string fullName = $"{ns}.{className}";
 
-            Class stubClass = new Class(className)
-                .SetStatic(true)
-                .SetNamespace(ns)
-                .WithAccessibility(Accessibility.Internal)
-                .WithMethod(SyncMethod.Stub())
-                .WithMethod(SyncMethodAll.Stub())
-                .WithMethod(SyncToDictMethod.Stub())
-                .WithMethod(SyncFromDictMethod.Stub());
+            Class stubClass = new Class(className).SetStatic(true)
+                                                  .SetNamespace(ns)
+                                                  .WithAccessibility(Accessibility.Internal)
+                                                  .WithMethod(SyncMethod.Stub())
+                                                  .WithMethod(SyncMethodAll.Stub())
+                                                  .WithMethod(SyncToDictMethod.Stub())
+                                                  .WithMethod(SyncFromDictMethod.Stub());
 
             Compilation compilation = GetStubCompilation(context, stubClass);
             INamedTypeSymbol? stubClassType = compilation.GetTypeByMetadataName(fullName);
 
             IEnumerable<(ITypeSymbol, ITypeSymbol)> calls = GetStubCalls(compilation, stubClassType);
 
-            Class generatedClass = new Class(className)
-                .SetStatic(true)
-                .SetNamespace(ns)
-                .WithAccessibility(Accessibility.Internal);
+            Class generatedClass = new Class(className).SetStatic(true)
+                                                       .SetNamespace(ns)
+                                                       .WithAccessibility(Accessibility.Internal);
 
             var generatedToTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
             var generatedFromTypes = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
