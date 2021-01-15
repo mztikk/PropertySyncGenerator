@@ -14,7 +14,7 @@ namespace PropertySyncGenerator
     [Generator]
     public class PropertySyncGenerator : ISourceGenerator
     {
-        public static Action<BodyWriter> EmptyWriter = (writer) => { };
+        public static readonly Action<BodyWriter> EmptyWriter = (writer) => { };
 
         public void Execute(GeneratorExecutionContext context)
         {
@@ -34,7 +34,7 @@ namespace PropertySyncGenerator
             Compilation compilation = GetStubCompilation(context, stubClass);
             INamedTypeSymbol? stubClassType = compilation.GetTypeByMetadataName(fullName);
 
-            IEnumerable<(ITypeSymbol, ITypeSymbol)>? calls = GetStubCalls(compilation, stubClassType);
+            IEnumerable<(ITypeSymbol, ITypeSymbol)> calls = GetStubCalls(compilation, stubClassType);
 
             Class generatedClass = new Class(className)
                 .SetStatic(true)
