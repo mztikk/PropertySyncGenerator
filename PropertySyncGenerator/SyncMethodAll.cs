@@ -9,7 +9,7 @@ using Sharpie.Writer;
 
 namespace PropertySyncGenerator
 {
-    internal class SyncMethod
+    internal class SyncMethodAll
     {
         private const string MethodName = "Sync";
         private const string ReturnType = "void";
@@ -20,7 +20,7 @@ namespace PropertySyncGenerator
         private readonly Lazy<ImmutableArray<IPropertySymbol>> _srcProperties;
         private readonly Lazy<ImmutableArray<IPropertySymbol>> _targetProperties;
 
-        public SyncMethod(ITypeSymbol srcType, ITypeSymbol targetType)
+        public SyncMethodAll(ITypeSymbol srcType, ITypeSymbol targetType)
         {
             _srcType = srcType;
             _targetType = targetType;
@@ -34,7 +34,6 @@ namespace PropertySyncGenerator
         {
             new(srcType, "source"),
             new(targetType, "target"),
-            new(CommonTypes.StringICollection, "ignores")
         };
 
         private void Body(BodyWriter writer)
@@ -44,8 +43,7 @@ namespace PropertySyncGenerator
                 if (_srcProperties.Value.Any(x => x.Name == item.Name && SymbolEqualityComparer.Default.Equals(x.Type, item.Type)))
                 {
                     string propName = _srcProperties.Value.First(x => x.Name == item.Name).Name;
-                    var ifStmt = new If($"!{_arguments[2].Name}.Contains(\"{propName}\")", (ifWriter) => ifWriter.WriteAssignment($"{_arguments[1].Name}.{item.Name}", $"{ _arguments[0].Name }.{ propName}"));
-                    writer.WriteIf(new IfStatement(ifStmt));
+                    writer.WriteAssignment($"{_arguments[1].Name}.{item.Name}", $"{ _arguments[0].Name }.{ propName}");
                 }
             }
         }

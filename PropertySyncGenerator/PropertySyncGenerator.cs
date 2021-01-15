@@ -15,7 +15,6 @@ namespace PropertySyncGenerator
     public class PropertySyncGenerator : ISourceGenerator
     {
         public static Action<BodyWriter> EmptyWriter = (writer) => { };
-        public const string StringDict = "System.Collections.Generic.Dictionary<string, string>";
 
         public void Execute(GeneratorExecutionContext context)
         {
@@ -28,6 +27,7 @@ namespace PropertySyncGenerator
                 .SetNamespace(ns)
                 .WithAccessibility(Accessibility.Internal)
                 .WithMethod(SyncMethod.Stub())
+                .WithMethod(SyncMethodAll.Stub())
                 .WithMethod(SyncToDictMethod.Stub())
                 .WithMethod(SyncFromDictMethod.Stub());
 
@@ -55,7 +55,7 @@ namespace PropertySyncGenerator
                         continue;
                     }
 
-                    if (t1.ToString() == StringDict)
+                    if (t1.ToString() == CommonTypes.StringDict)
                     {
                         if (generatedFromTypes.Contains(t2))
                         {
@@ -65,7 +65,7 @@ namespace PropertySyncGenerator
                         generatedClass = generatedClass.WithMethod(new SyncFromDictMethod(t2).Build());
                         generatedFromTypes.Add(t2);
                     }
-                    else if (t2.ToString() == StringDict)
+                    else if (t2.ToString() == CommonTypes.StringDict)
                     {
                         if (generatedToTypes.Contains(t1))
                         {
@@ -82,7 +82,7 @@ namespace PropertySyncGenerator
                             continue;
                         }
 
-                        generatedClass = generatedClass.WithMethod(new SyncMethod(t1, t2).Build());
+                        generatedClass = generatedClass.WithMethod(new SyncMethod(t1, t2).Build()).WithMethod(new SyncMethodAll(t1, t2).Build());
                         generatedSyncSrcTypes.Add(t1);
                         generatedSyncTargetTypes.Add(t2);
                     }

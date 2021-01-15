@@ -28,7 +28,7 @@ namespace PropertySyncGenerator
         private static Argument[] Arguments(string type) => new Argument[]
             {
                 new (type, "source"),
-                new (PropertySyncGenerator.StringDict, "target"),
+                new (CommonTypes.StringDict, "target"),
                 new ("bool", "force", "false")
             };
 
