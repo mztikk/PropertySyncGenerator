@@ -44,7 +44,8 @@ namespace PropertySyncGenerator
                 if (_srcProperties.Value.Any(x => x.Name == item.Name && SymbolEqualityComparer.Default.Equals(x.Type, item.Type)))
                 {
                     string propName = _srcProperties.Value.First(x => x.Name == item.Name).Name;
-                    var ifStmt = new If($"!{_arguments[2].Name}.Contains(\"{propName}\")", (ifWriter) => ifWriter.WriteAssignment($"{_arguments[1].Name}.{item.Name}", $"{ _arguments[0].Name }.{ propName}"));
+                    var ifStmt = new If($"!{_arguments[2].Name}.Contains(\"{propName}\")",
+                                        (ifWriter) => ifWriter.WriteAssignment($"{_arguments[1].Name}.{item.Name}", $"{ _arguments[0].Name }.{propName}"));
                     writer.WriteIf(new IfStatement(ifStmt));
                 }
             }
