@@ -12,7 +12,7 @@
     <RepositoryUrl>https://github.com/mztikk/PropertySyncGenerator</RepositoryUrl>
     <Authors>mztikk</Authors>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageVersion>0.1.0.0</PackageVersion>
+    <PackageVersion>0.1.0.2</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +22,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />
     <PackageReference Include="Sharpie" Version="0.6.1.1" GeneratePathProperty="true" PrivateAssets="all" />
+    <None Include="$(PKGSharpie)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" IncludeRuntimeDependency="false" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -33,13 +34,14 @@
   <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
+
   <PropertyGroup>
     <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <Target Name="GetDependencyTargetPaths">
     <ItemGroup>
-      <TargetPathWithTargetPlatformMoniker Include="$(PKGSharpie)\lib\netstandard2.0\Sharpie.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGSharpie)\lib\netstandard2.0\Sharpie.dll" Pack="true" PackagePath="analyzers/dotnet/cs" IncludeRuntimeDependency="false" Visible="false" />
     </ItemGroup>
   </Target>
 </Project>
