@@ -12,7 +12,7 @@
     <RepositoryUrl>https://github.com/mztikk/PropertySyncGenerator</RepositoryUrl>
     <Authors>mztikk</Authors>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageVersion>0.1.0.2</PackageVersion>
+    <PackageVersion>0.1.0.3</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +20,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Sharpie" Version="0.6.1.1" GeneratePathProperty="true" PrivateAssets="all" />
     <None Include="$(PKGSharpie)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" IncludeRuntimeDependency="false" />
   </ItemGroup>
