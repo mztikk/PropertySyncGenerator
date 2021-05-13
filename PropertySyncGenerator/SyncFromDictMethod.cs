@@ -15,7 +15,7 @@ namespace PropertySyncGenerator
         private const string ReturnType = "void";
 
         private readonly ITypeSymbol _type;
-        private readonly ImmutableArray<Argument> _arguments;
+        private readonly ImmutableArray<Parameter> _arguments;
         private readonly Lazy<ImmutableArray<IPropertySymbol>> _properties;
 
         public SyncFromDictMethod(ITypeSymbol type)
@@ -26,7 +26,7 @@ namespace PropertySyncGenerator
             _properties = new Lazy<ImmutableArray<IPropertySymbol>>(() => _type.GetAccessibleProperties().ToImmutableArray());
         }
 
-        private static Argument[] Arguments(string type) => new Argument[]
+        private static Parameter[] Arguments(string type) => new Parameter[]
             {
                 new (CommonTypes.StringDict, "source"),
                 new (type, "target")
@@ -70,6 +70,6 @@ namespace PropertySyncGenerator
 
         public static Method Stub() => GetMethod(Arguments("object"), PropertySyncGenerator.EmptyWriter);
 
-        private static Method GetMethod(IEnumerable<Argument> arguments, Action<BodyWriter> body) => new Method(Accessibility.Public, true, false, ReturnType, MethodName, arguments, body);
+        private static Method GetMethod(IEnumerable<Parameter> arguments, Action<BodyWriter> body) => new Method(Accessibility.Public, true, false, ReturnType, MethodName, arguments, body);
     }
 }

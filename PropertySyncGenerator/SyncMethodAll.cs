@@ -16,7 +16,7 @@ namespace PropertySyncGenerator
 
         private readonly ITypeSymbol _srcType;
         private readonly ITypeSymbol _targetType;
-        private readonly ImmutableArray<Argument> _arguments;
+        private readonly ImmutableArray<Parameter> _arguments;
         private readonly Lazy<ImmutableArray<IPropertySymbol>> _srcProperties;
         private readonly Lazy<ImmutableArray<IPropertySymbol>> _targetProperties;
 
@@ -30,7 +30,7 @@ namespace PropertySyncGenerator
             _targetProperties = new Lazy<ImmutableArray<IPropertySymbol>>(() => _targetType.GetAccessibleProperties().ToImmutableArray());
         }
 
-        private static Argument[] Arguments(string srcType, string targetType) => new Argument[]
+        private static Parameter[] Arguments(string srcType, string targetType) => new Parameter[]
         {
             new(srcType, "source"),
             new(targetType, "target"),
@@ -52,6 +52,6 @@ namespace PropertySyncGenerator
 
         public static Method Stub() => GetMethod(Arguments("object", "object"), PropertySyncGenerator.EmptyWriter);
 
-        private static Method GetMethod(IEnumerable<Argument> arguments, Action<BodyWriter> body) => new Method(Accessibility.Public, true, false, ReturnType, MethodName, arguments, body);
+        private static Method GetMethod(IEnumerable<Parameter> arguments, Action<BodyWriter> body) => new Method(Accessibility.Public, true, false, ReturnType, MethodName, arguments, body);
     }
 }
